@@ -3,9 +3,23 @@ var Logger = require('./modules/Logger');
 var Commands = require('./modules/CommandList');
 var GameServer = require('./GameServer');
 var figlet = require('figlet');
+var express = require('express'); // Added Express for Render
+
+// Initialize Express (for Render Hosting)
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('MK Agario Server is running!');
+});
+
+// Start Express server (only for Render)
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
 
 // Init variables
-var showConsole = true;
+var showConsole = process.env.RENDER ? false : true; // Disable console on Render
 
 // Start msg
 setLoggerColorscheme();
@@ -27,8 +41,7 @@ Logger.info("\u001B[1m\u001B[32mMultiOgar-Edited " + gameServer.version + "\u001
 
 // Handle arguments
 process.argv.forEach(function (item) {
-
-    switch (item){
+    switch (item) {
         case "--help":
             console.log("Proper Usage: node index.js");
             console.log("    -n, --name             Set name");
@@ -37,7 +50,7 @@ process.argv.forEach(function (item) {
             console.log("    -m, --gamemode         Set game mode (id)");
             console.log("    -c, --connections      Set max connections limit");
             console.log("    -t, --tracker          Set serverTracker");
-            console.log("    -l, --light-background Set a light-background colorscheme for logger")
+            console.log("    -l, --light-background Set a light-background colorscheme for logger");
             console.log("    --noconsole            Disables the console");
             console.log("    --help                 Help menu");
             console.log("");
@@ -73,7 +86,7 @@ process.argv.forEach(function (item) {
 
         case "-l":
         case "--light-background":
-            //Has already been processed before logger initialisation
+            // Has already been processed before logger initialization
             break;
 
         case "--noconsole":
@@ -82,48 +95,48 @@ process.argv.forEach(function (item) {
     }
 });
 
-function setLoggerColorscheme(){
-    if (process.argv.indexOf("-l") != -1
-        || process.argv.indexOf("--light-background") != -1) {
+function setLoggerColorscheme() {
+    if (process.argv.includes("-l") || process.argv.includes("--light-background")) {
         Logger.setLightBackgroundColorscheme();
     }
 }
 
-function getValue(param){
+function getValue(param) {
     var ind = process.argv.indexOf(param);
-    var item  = process.argv[ind + 1]
-    if (!item || item.indexOf('-') != -1){
+    var item = process.argv[ind + 1];
+    if (!item || item.startsWith('-')) {
         Logger.error("No value for " + param);
         return null;
-    } else{
+    } else {
         return item;
     }
 }
 
-function setParam(paramName, val){
-    if (!gameServer.config.hasOwnProperty(paramName)){
+function setParam(paramName, val) {
+    if (!gameServer.config.hasOwnProperty(paramName)) {
         Logger.error("Wrong parameter");
     }
     if (val || val === 0) {
-        if (typeof val === 'string'){
+        if (typeof val === 'string') {
             val = "'" + val + "'";
         }
         eval("gameServer.config." + paramName + "=" + val);
     }
 }
 
-
 gameServer.start();
-figlet(('MultiOgar-Edited  ' + gameServer.version), function(err, data) {
+
+// ASCII Art Banner
+figlet(('MultiOgar-Edited  ' + gameServer.version), function (err, data) {
     if (err) {
         console.log('Something went wrong...');
         console.dir(err);
         return;
     }
-    console.log(data)
+    console.log(data);
 });
 
-// Initialize the server console
+// Initialize the server console (Disabled on Render)
 if (showConsole) {
     var readline = require('readline');
     var in_ = readline.createInterface({
@@ -133,9 +146,9 @@ if (showConsole) {
     setTimeout(prompt, 100);
 }
 
-// Console functions
-
+// Console functions (Disabled on Render)
 function prompt() {
+    if (!showConsole) return;
     in_.question(">", function (str) {
         try {
             parseCommands(str);
@@ -148,26 +161,18 @@ function prompt() {
 }
 
 function parseCommands(str) {
-    // Log the string
     Logger.write(">" + str);
+    if (str === '') return;
 
-    // Don't process ENTER
-    if (str === '')
-        return;
-
-    // Splits the string
     var split = str.split(" ");
-
-    // Process the first string value
     var first = split[0].toLowerCase();
-
-    // Get command function
     var execute = Commands.list[first];
-    if (typeof execute != 'undefined') {
+
+    if (typeof execute !== 'undefined') {
         execute(gameServer, split);
     } else {
         Logger.warn("Invalid Command!");
     }
-};
+}
 
 exports.gameServer = gameServer;
