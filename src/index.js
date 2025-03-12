@@ -3,15 +3,15 @@ const WebSocket = require("ws");
 const path = require("path");
 const http = require("http");
 
-// Import your original game server code
-const GameServer = require("./GameServer"); // Adjust the path to your GameServer.js file
+// Import the GameServer
+const GameServer = require("./GameServer");
 
 // Create an Express app
 const app = express();
 const PORT = process.env.PORT || 1337; // Railway assigns this dynamically
 
 // Serve static files from the root directory (index.css, index.js, etc.)
-app.use(express.static(__dirname));  // Serving from the root directory now
+app.use(express.static(__dirname));
 
 // Serve specific files with custom routes
 app.get("/gameserver.js", (req, res) => {
@@ -25,7 +25,7 @@ app.get("/gameserver.mk", (req, res) => {
 // Serve index.html when accessing "/"
 app.get("/", (req, res) => {
     const indexPath = path.join(__dirname, "index.html");
-    console.log("Attempting to serve index.html from:", indexPath); // Log the path
+    console.log("Attempting to serve index.html from:", indexPath);
     res.sendFile(indexPath, (err) => {
         if (err) {
             console.error("Error serving index.html:", err);
@@ -37,22 +37,24 @@ app.get("/", (req, res) => {
 // Create an HTTP server using Express
 const server = http.createServer(app);
 
-// Attach WebSocket server to the same HTTP server
-const wss = new WebSocket.Server({ server });
-
-// Initialize and start the game server
-const gameServer = new GameServer(server); // Pass the HTTP server to the game server
+// Initialize the game server
+const gameServer = new GameServer(server); // Pass the HTTP server to the GameServer
 gameServer.start(); // Start the game server
 
 // WebSocket connection handler
-wss.on("connection", (ws) => {
+const wsOptions = { server: server }; // The options for the WebSocket server
+
+gameServer.wsServer = new WebSocket.Server(wsOptions);
+
+gameServer.wsServer.on("connection", (ws) => {
     console.log("🔌 A client connected!");
     ws.send("✅ Welcome to the WebSocket server!");
 
     // Forward WebSocket messages to the game server
     ws.on("message", (message) => {
         console.log(`📩 Received: ${message}`);
-        gameServer.handleWebSocketMessage(ws, message); // Pass the message to the game server
+        // Handle the WebSocket message in your game server
+        gameServer.handleWebSocketMessage(ws, message);
     });
 
     ws.on("error", (err) => {
@@ -61,7 +63,7 @@ wss.on("connection", (ws) => {
 
     ws.on("close", () => {
         console.log("❌ Client disconnected");
-        gameServer.handleWebSocketClose(ws); // Notify the game server of the disconnection
+        gameServer.handleWebSocketClose(ws);
     });
 });
 
@@ -74,8 +76,8 @@ server.listen(PORT, () => {
 process.on("SIGTERM", () => {
     console.log("⚠️ Shutting down server...");
     server.close(() => console.log("✅ HTTP Server closed."));
-    wss.close(() => console.log("✅ WebSocket Server closed."));
-    gameServer.shutdown(); // Shut down the game server gracefully
+    gameServer.wsServer.close(() => console.log("✅ WebSocket Server closed."));
+    gameServer.shutdown(); // Gracefully shut down the game server
 });
 
 console.log("✅ Server is set up and waiting for connections...");
