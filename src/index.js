@@ -5,9 +5,12 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 1337; // Railway assigns this dynamically
 
+// Serve static files (index.css, images, etc.) from the "src" folder
+app.use(express.static(path.join(__dirname, "src")));
+
 // Serve index.html when accessing "/"
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+    res.sendFile(path.join(__dirname, "src", "index.html"));
 });
 
 // Start Express server
