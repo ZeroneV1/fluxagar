@@ -1,13 +1,17 @@
 const express = require("express");
 const WebSocket = require("ws");
 const path = require("path");
-const process = require("process");
 
 const app = express();
 const PORT = process.env.PORT || 1337; // Railway assigns this dynamically
 
 // Serve static files from the 'web' directory
 app.use(express.static(path.join(__dirname, "web")));
+
+// Serve index.html when accessing "/"
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "web", "index.html"));
+});
 
 // Start Express server
 const server = app.listen(PORT, () => {
@@ -17,9 +21,8 @@ const server = app.listen(PORT, () => {
 // Attach WebSocket server to the same Express server
 const wss = new WebSocket.Server({ server });
 
-wss.on("connection", (ws, req) => {
+wss.on("connection", (ws) => {
     console.log("🔌 A client connected!");
-
     ws.send("✅ Welcome to the WebSocket server!");
 
     ws.on("message", (message) => {
@@ -36,20 +39,10 @@ wss.on("connection", (ws, req) => {
 });
 
 // Graceful shutdown handling
-const shutdown = () => {
+process.on("SIGTERM", () => {
     console.log("⚠️ Shutting down server...");
-    
-    wss.clients.forEach(client => client.close());
+    server.close(() => console.log("✅ HTTP Server closed."));
     wss.close(() => console.log("✅ WebSocket Server closed."));
-
-    server.close(() => {
-        console.log("✅ HTTP Server closed.");
-        process.exit(0);
-    });
-};
-
-// Handle process exit signals
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
+});
 
 console.log("✅ Server is set up and waiting for connections...");
