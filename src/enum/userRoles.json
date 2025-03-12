@@ -1,0 +1,20 @@
+[
+    {
+        "ip":"*",
+        "password":"12qw",
+        "role":"ADMIN",
+        "name":"Administrator"
+    },
+    {
+        "ip":"*",
+        "password":"34er",
+        "role":"MODER",
+        "name":"Moderator"
+    },
+    {
+        "ip":"127.0.0.1",
+        "password":"User",
+        "role":"USER",
+        "name":"Local User"
+    }
+]
