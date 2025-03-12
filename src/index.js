@@ -8,6 +8,15 @@ const PORT = process.env.PORT || 1337; // Railway assigns this dynamically
 // Serve static files from the root directory (index.css, index.js, etc.)
 app.use(express.static(__dirname));  // Serving from the root directory now
 
+// Serve specific files with custom routes
+app.get("/gameserver.js", (req, res) => {
+    res.sendFile(path.join(__dirname, "gameserver.js"));
+});
+
+app.get("/gameserver.mk", (req, res) => {
+    res.sendFile(path.join(__dirname, "gameserver.mk"));
+});
+
 // Serve index.html when accessing "/"
 app.get("/", (req, res) => {
     const indexPath = path.join(__dirname, "index.html");
