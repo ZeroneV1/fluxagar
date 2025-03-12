@@ -2,7 +2,7 @@ const express = require("express");
 const WebSocket = require("ws");
 
 const app = express();
-const PORT = process.env.PORT || 10000; // Render assigns this dynamically
+const PORT = process.env.PORT || 1337; // Render assigns this dynamically
 
 // Serve static files (client)
 app.use(express.static("web"));
