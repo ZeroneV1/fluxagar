@@ -1,0 +1,10 @@
+{
+  "build": {
+    "env": "NODE_ENV=production",
+    "cmd": "npm install"
+  },
+  "deploy": {
+    "cmd": "npm start",
+    "restartPolicyType": "always"
+  }
+}
